@@ -1,0 +1,29 @@
+$logFile = "C:\CS_Builds\alog.txt"
+$targetDirectory = "C:\CS_Builds"
+
+# Create the target directory if it doesn't exist
+if (-not (Test-Path -Path $targetDirectory)) {
+    New-Item -Path $targetDirectory -ItemType Directory | Out-Null
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Created directory: $targetDirectory" | Out-File -FilePath $logFile -Append
+}
+
+$scriptUrl = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/CustomImageTemplateScripts/CustomImageTemplateScripts_2023-04-19/RDPShortpath.ps1"
+$scriptFilePath = Join-Path -Path $targetDirectory -ChildPath "RDPShortpath.ps1"
+
+# Download the script file into the target directory and log the result
+try {
+    Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptFilePath -ErrorAction Stop
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Downloaded script file: $scriptFilePath" | Out-File -FilePath $logFile -Append
+}
+catch {
+    $errorDetail = $_.Exception.Message
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to download script file: $scriptUrl"
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Error details: $errorDetail"
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to download script file: $scriptUrl" | Out-File -FilePath $logFile -Append
+    Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Error details: $errorDetail" | Out-File -FilePath $logFile -Append
+    Exit
+}
+
+# Execute the PowerShell script
+Invoke-Expression "$scriptFilePath" 4>&1 | Out-File -FilePath $logFile -Append
+Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Executed PowerShell script: $scriptFilePath" | Out-File -FilePath $logFile -Append
